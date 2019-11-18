@@ -1,0 +1,145 @@
+From 42f1daa23335ef13f01dc517a282b31e10e581d0 Mon Sep 17 00:00:00 2001
+From: Andy Doan <andy@foundries.io>
+Date: Fri, 20 Dec 2019 13:36:05 -0600
+Subject: [PATCH] Add "--service-images" to pull command
+
+This allows users in a single node configuration to optionally pull
+down the service images defined in an app bundle with:
+
+ docker app pull --service-images [your app]
+
+Fixes: fixes #789
+
+Signed-off-by: Andy Doan <andy@foundries.io>
+---
+ e2e/pushpull_test.go      | 22 ++++++++++++++++
+ internal/commands/pull.go | 55 ++++++++++++++++++++++++++++++++++++---
+ 2 files changed, 74 insertions(+), 3 deletions(-)
+
+diff --git a/e2e/pushpull_test.go b/e2e/pushpull_test.go
+index cd7b14c35..56504b724 100644
+--- a/e2e/pushpull_test.go
++++ b/e2e/pushpull_test.go
+@@ -107,6 +107,28 @@ Unable to find App "unknown": failed to resolve bundle manifest "docker.io/libra
+ 	})
+ }
+ 
++func TestPushPullServiceImages(t *testing.T) {
++	runWithDindSwarmAndRegistry(t, func(info dindSwarmAndRegistryInfo) {
++		cmd := info.configuredCmd
++		ref := info.registryAddress + "/test/push-pull"
++		tag := ":v.0.0.1"
++		build(t, cmd, dockerCli, ref+tag, filepath.Join("testdata", "push-pull"))
++
++		cmd.Command = dockerCli.Command("app", "push", ref+tag)
++		icmd.RunCmd(cmd).Assert(t, icmd.Success)
++
++		// Make sure this image does not exist so that we can verify the pull works.
++		cmd.Command = dockerCli.Command("image", "rm", "busybox:1.30.1")
++		icmd.RunCmd(cmd).Assert(t, icmd.Success)
++
++		cmd.Command = dockerCli.Command("app", "pull", "--service-images", ref+tag)
++		icmd.RunCmd(cmd).Assert(t, icmd.Success)
++
++		cmd.Command = dockerCli.Command("image", "inspect", "busybox@sha256:4b6ad3a68d34da29bf7c8ccb5d355ba8b4babcad1f99798204e7abb43e54ee3d")
++		icmd.RunCmd(cmd).Assert(t, icmd.Success)
++	})
++}
++
+ func TestPushInstallBundle(t *testing.T) {
+ 	runWithDindSwarmAndRegistry(t, func(info dindSwarmAndRegistryInfo) {
+ 		cmd := info.configuredCmd
+diff --git a/internal/commands/pull.go b/internal/commands/pull.go
+index 19b93e61e..f729315c8 100644
+--- a/internal/commands/pull.go
++++ b/internal/commands/pull.go
+@@ -1,6 +1,7 @@
+ package commands
+ 
+ import (
++	"context"
+ 	"fmt"
+ 	"os"
+ 
+@@ -11,24 +12,62 @@ import (
+ 	"github.com/docker/cli/cli/command"
+ 	"github.com/docker/cli/cli/config"
+ 	"github.com/docker/distribution/reference"
++	"github.com/docker/docker/api/types"
++	"github.com/docker/docker/pkg/jsonmessage"
++	"github.com/docker/docker/registry"
+ 	"github.com/pkg/errors"
+ 	"github.com/spf13/cobra"
+ )
+ 
++type pullOptions struct {
++	serviceImages bool
++}
++
+ func pullCmd(dockerCli command.Cli) *cobra.Command {
++	var opts pullOptions
++
+ 	cmd := &cobra.Command{
+-		Use:     "pull APP_IMAGE",
++		Use:     "pull [OPTIONS] APP_IMAGE",
+ 		Short:   "Pull an App image from a registry",
+ 		Example: `$ docker app pull myrepo/myapp:0.1.0`,
+ 		Args:    cli.ExactArgs(1),
+ 		RunE: func(cmd *cobra.Command, args []string) error {
+-			return runPull(dockerCli, args[0])
++			return runPull(dockerCli, opts, args[0])
+ 		},
+ 	}
++	cmd.Flags().BoolVar(&opts.serviceImages, "service-images", false, "Also pull down service images to this host's context")
+ 	return cmd
+ }
+ 
+-func runPull(dockerCli command.Cli, name string) error {
++func pullImage(ctx context.Context, cli command.Cli, image string) error {
++	ref, err := reference.ParseNormalizedNamed(image)
++	if err != nil {
++		return err
++	}
++
++	// Resolve the Repository name from fqn to RepositoryInfo
++	repoInfo, err := registry.ParseRepositoryInfo(ref)
++	if err != nil {
++		return err
++	}
++	authConfig := command.ResolveAuthConfig(ctx, cli, repoInfo.Index)
++	encodedAuth, err := command.EncodeAuthToBase64(authConfig)
++	if err != nil {
++		return err
++	}
++	options := types.ImagePullOptions{
++		RegistryAuth: encodedAuth,
++	}
++	responseBody, err := cli.Client().ImagePull(ctx, image, options)
++	if err != nil {
++		return err
++	}
++	defer responseBody.Close()
++
++	return jsonmessage.DisplayJSONMessagesStream(responseBody, cli.Out(), cli.Out().FD(), false, nil)
++}
++
++func runPull(dockerCli command.Cli, opts pullOptions, name string) error {
+ 	appstore, err := store.NewApplicationStore(config.Dir())
+ 	if err != nil {
+ 		return err
+@@ -52,5 +91,15 @@ func runPull(dockerCli command.Cli, name string) error {
+ 	}
+ 	fmt.Fprintf(os.Stdout, "Successfully pulled %q (%s) from %s\n", bndl.Name, bndl.Version, ref.String())
+ 
++	if opts.serviceImages {
++		ctx := context.Background()
++		for name, image := range bndl.Images {
++			fmt.Fprintf(os.Stdout, "Pulling: %s -> %s\n", name, image.Image)
++			if err := pullImage(ctx, dockerCli, image.Image); err != nil {
++				return err
++			}
++		}
++	}
++
+ 	return nil
+ }

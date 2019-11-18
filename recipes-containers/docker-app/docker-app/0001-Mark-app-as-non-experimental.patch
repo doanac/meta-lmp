@@ -1,0 +1,28 @@
+From 0be48cd0f2da365b5a41c45e04cf9627ebbeb3ee Mon Sep 17 00:00:00 2001
+From: Andy Doan <andy@foundries.io>
+Date: Sat, 16 Nov 2019 23:02:08 -0600
+Subject: [PATCH] Mark app as non-experimental
+
+This allows the docker CLI to use this plugin without having to set
+any magic environment variables.
+
+Signed-off-by: Andy Doan <andy@foundries.io>
+---
+ cmd/docker-app/main.go | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/cmd/docker-app/main.go b/cmd/docker-app/main.go
+index 2977c7c6..ffc0bf1b 100644
+--- a/cmd/docker-app/main.go
++++ b/cmd/docker-app/main.go
+@@ -27,6 +27,6 @@ func main() {
+ 		SchemaVersion: "0.1.0",
+ 		Vendor:        "Docker Inc.",
+ 		Version:       internal.Version,
+-		Experimental:  true,
++		Experimental:  false,
+ 	})
+ }
+-- 
+2.24.0
+

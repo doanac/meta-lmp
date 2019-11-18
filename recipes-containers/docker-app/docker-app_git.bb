@@ -7,11 +7,15 @@ LIC_FILES_CHKSUM = "file://src/${GO_IMPORT}/LICENSE;md5=4859e97a9c7780e77972d989
 GO_IMPORT = "github.com/docker/app"
 SRC_URI = "git://${GO_IMPORT} \
 	file://0001-packing-use-hub.foundries.io-cnab-app-base-for-cnab-.patch;patchdir=src/${GO_IMPORT} \
+	file://0001-Mark-app-as-non-experimental.patch;patchdir=src/${GO_IMPORT} \
+	file://cli-config-support-default-system-config.patch;patchdir=src/${GO_IMPORT} \
+	file://791-pull-service-images.patch;patchdir=src/${GO_IMPORT} \
 "
-SRCREV = "7eea32b735b1830ca7de723a1ecb923eae65a2f7"
+SRCREV = "012748d75405fb67b7c523f7660fca67bdc4f748"
 
 UPSTREAM_CHECK_COMMITS = "1"
-PV = "v0.8.0"
+# PV = "v0.9.0-beta1"
+PV = "master"
 
 inherit go goarch
 
@@ -23,7 +27,13 @@ do_compile() {
 		-X ${GO_IMPORT}/internal.Version=${BUILD_TAG} \
 		-X ${GO_IMPORT}/internal.Experimental=off"
 	mkdir -p ${B}/${GO_BUILD_BINDIR}
-	${GO} build -ldflags="${DOCKER_APP_LDFLAGS}" -o ${B}/${GO_BUILD_BINDIR}/docker-app ./cmd/docker-app-standalone
+	${GO} build -ldflags="${DOCKER_APP_LDFLAGS}" -o ${WORKDIR}/docker-app ./cmd/docker-app
+}
+
+do_install() {
+	install -d ${D}${libdir}/docker/cli-plugins
+	install -m 0755 ${WORKDIR}/docker-app ${D}${libdir}/docker/cli-plugins
 }
 
 RDEPENDS_${PN}-dev += "bash"
+FILES_${PN} += "${libdir}/docker/cli-plugins"
