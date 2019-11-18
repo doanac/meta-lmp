@@ -1,0 +1,8 @@
+[Unit]
+Description=Initialize Docker Swarm
+After=docker.service
+ConditionPathExists=!/var/lib/docker/swarm/state.json
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/docker swarm init --listen-addr 127.0.0.1:2377
