@@ -10,10 +10,11 @@ SRC_URI = "git://${GO_IMPORT} \
 	file://0001-Mark-app-as-non-experimental.patch;patchdir=src/${GO_IMPORT} \
 	file://cli-config-support-default-system-config.patch;patchdir=src/${GO_IMPORT} \
 "
-SRCREV = "44932b629b0541b28d0898c5dfac6a5f978d1ba1"
+SRCREV = "012748d75405fb67b7c523f7660fca67bdc4f748"
 
 UPSTREAM_CHECK_COMMITS = "1"
-PV = "v0.9.0-beta1"
+#PV = "v0.9.0-beta1"
+PV = "master"
 
 inherit go goarch
 
