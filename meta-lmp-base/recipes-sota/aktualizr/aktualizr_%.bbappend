@@ -1,9 +1,9 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-BRANCH_lmp = "2020.2+fio"
-SRCREV_lmp = "7a1b69eb9db9f77d8f07b8e9172fcbae44ccd5ee"
+BRANCH_lmp = "master"
+SRCREV_lmp = "9b82f45de1fbcde6da195156aa78d5bf0f3d3102"
 
-SRC_URI_lmp = "gitsm://github.com/foundriesio/aktualizr;branch=${BRANCH};name=aktualizr \
+SRC_URI_lmp = "gitsm://github.com/foundriesio/aktualizr-lite;branch=${BRANCH};name=aktualizr \
     file://aktualizr.service \
     file://aktualizr-lite.service \
     file://aktualizr-lite.path \
@@ -26,6 +26,23 @@ PACKAGECONFIG_remove_class-target_riscv64 = "dockerapp"
 SYSTEMD_PACKAGES += "${PN}-lite"
 SYSTEMD_SERVICE_${PN}-lite = "aktualizr-lite.service aktualizr-lite.path"
 
+
+# Override meta-updater because it doesn't know where to find get_version.sh
+do_configure_prepend() {
+    bbwarn "Hacking get_version!"
+    cd ${S}
+    git log -1 --format=%h | tr -d '\n' > VERSION
+}
+
+do_install_prepend() {
+    bbwarn "Hacking install paths"
+
+    # hack the path to config so aktualizr's do_install_append will find config files
+    [ -e ${S}/config ] || ln -s ${S}/aktualizr/config ${S}/config
+
+    # hack so native build will find sota_tools
+    [ -e ${B}/src ] || ln -s ${B}/aktualizr/src ${B}/src
+}
 do_install_append() {
     install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/aktualizr-lite.service ${D}${systemd_system_unitdir}/
@@ -34,3 +51,11 @@ do_install_append() {
 
 # Force same RDEPENDS, packageconfig rdepends common to both
 RDEPENDS_${PN}-lite = "${RDEPENDS_aktualizr}"
+
+# These are wrong in meta-updater. Hacking here for now:
+FILES_${PN}-lib = " \
+                ${libdir}/libaktualizr.so \
+                "
+FILES_${PN}-secondary-lib = " \
+                ${libdir}/libaktualizr_secondary.so \
+                "
