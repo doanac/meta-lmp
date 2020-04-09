@@ -5,11 +5,11 @@ LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://src/${GO_IMPORT}/LICENSE;md5=2a944942e1496af1886903d274dedb13"
 
 GO_IMPORT = "github.com/foundriesio/fioconfig"
-SRC_URI = "git://${GO_IMPORT} \
+SRC_URI = "git://${GO_IMPORT};branch=contrib-scripts \
 	file://fioconfig.service \
 	file://fioconfig-extract.service \
 "
-SRCREV = "665823b724ca653874b7d08fd3029a88ed5e708e"
+SRCREV = "a538ce3e9f609dfaecceb14bac93644043bdcbc0"
 
 UPSTREAM_CHECK_COMMITS = "1"
 
@@ -31,6 +31,8 @@ do_install_append() {
 	install -d ${D}${systemd_system_unitdir}
 	install -m 0644 ${WORKDIR}/fioconfig.service ${D}${systemd_system_unitdir}/
 	install -m 0644 ${WORKDIR}/fioconfig-extract.service ${D}${systemd_system_unitdir}/
+	install -m 0755 ${S}/src/${GO_IMPORT}/contrib/aktualizr-toml-update ${D}${bindir}
+	install -m 0755 ${S}/src/${GO_IMPORT}/contrib/factory-config-vpn ${D}${bindir}
 }
 
 # We need aktualizr because we uses its device gateway connectivity and keys
@@ -39,4 +41,6 @@ RDEPENDS_${PN} = "${SOTA_CLIENT}"
 FILES_${PN} += " \
 	${systemd_unitdir}/system/fioconfig.service \
 	${systemd_unitdir}/system/fioconfig-extract.service \
+	${bindir}/aktualizr-toml-update \
+	${bindir}/factory-config-vpn \
 "
