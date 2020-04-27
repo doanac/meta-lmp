@@ -1,9 +1,9 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-BRANCH_lmp = "2020.4"
-SRCREV_lmp = "38251e646e5196ada6069bdb30a4e740d2da5c4f"
+BRANCH_lmp = "compose"
+SRCREV_lmp = "8cafbd9f5da1d01d1b98fd83af932d23d197d9fc"
 
-SRC_URI_lmp = "gitsm://github.com/foundriesio/aktualizr-lite;branch=${BRANCH};name=aktualizr \
+SRC_URI_lmp = "gitsm://github.com/doanac/aktualizr-lite;branch=${BRANCH};name=aktualizr \
     file://aktualizr.service \
     file://aktualizr-lite.service \
     file://aktualizr-lite.path \
