@@ -4,13 +4,13 @@ SECTION = "devel"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://src/${GO_IMPORT}/LICENSE;md5=2a944942e1496af1886903d274dedb13"
 
-GO_IMPORT = "github.com/foundriesio/fioconfig"
-SRC_URI = "git://${GO_IMPORT} \
+GO_IMPORT = "github.com/doanac/fioconfig"
+SRC_URI = "git://${GO_IMPORT};branch=wireguard \
 	file://fioconfig.service \
 	file://fioconfig.path \
 	file://fioconfig-extract.service \
 "
-SRCREV = "1db6a4fdee49a69a64c4c0ac6f92bc2aa84c874f"
+SRCREV = "47b07fea159ee7d70d9027ecd0e0a46dae35f767"
 
 UPSTREAM_CHECK_COMMITS = "1"
 
@@ -21,7 +21,7 @@ do_compile() {
 	BUILD_COMMIT=`git rev-parse --short HEAD`
 	FIOCONFIG_LDFLAGS="-X ${GO_IMPORT}/internal.Commit=${BUILD_COMMIT}"
 	mkdir -p ${B}/${GO_BUILD_BINDIR}
-	${GO} build -ldflags="${FIOCONFIG_LDFLAGS}" -o ${B}/${GO_BUILD_BINDIR}/fioconfig main.go
+	${GO} build -tags vpn -ldflags="${FIOCONFIG_LDFLAGS}" -o ${B}/${GO_BUILD_BINDIR}/fioconfig main.go
 	chmod u+w -R ${B}
 }
 
@@ -36,6 +36,7 @@ do_install_append() {
 	install -m 0644 ${WORKDIR}/fioconfig-extract.service ${D}${systemd_system_unitdir}/
 	install -d ${D}${datadir}/fioconfig/handlers
 	install -m 0755 ${S}/src/${GO_IMPORT}/contrib/aktualizr-toml-update ${D}${datadir}/fioconfig/handlers
+	install -m 0755 ${S}/src/${GO_IMPORT}/contrib/factory-config-vpn ${D}${datadir}/fioconfig/handlers
 }
 
 # We need aktualizr because we uses its device gateway connectivity and keys
