@@ -1,7 +1,7 @@
-From 2c3660a7d5bdeb392373b8141b0cb2004610469e Mon Sep 17 00:00:00 2001
+From bbee930d311b3e657c84722bbd23c8c54eb063af Mon Sep 17 00:00:00 2001
 From: Andy Doan <andy@foundries.io>
 Date: Mon, 23 Mar 2020 15:16:52 -0500
-Subject: [PATCH] Add concept of "compose bundles"
+Subject: [PATCH] Add concept of "compose apps"
 
 Signed-off-by: Andy Doan <andy@foundries.io>
 ---
@@ -10,14 +10,14 @@ Signed-off-by: Andy Doan <andy@foundries.io>
  2 files changed, 96 insertions(+), 1 deletion(-)
 
 diff --git a/compose/cli/main.py b/compose/cli/main.py
-index f0fbe643..a96254e8 100644
+index f0fbe643..7a34fa31 100644
 --- a/compose/cli/main.py
 +++ b/compose/cli/main.py
 @@ -32,6 +32,7 @@ from ..const import COMPOSEFILE_V2_2 as V2_2
  from ..const import IS_WINDOWS_PLATFORM
  from ..errors import StreamParseError
  from ..progress_stream import StreamOutputError
-+from ..project import download_compose_bundle
++from ..project import download_compose_app
  from ..project import get_image_digests
  from ..project import MissingDigests
  from ..project import NoSuchService
@@ -42,7 +42,7 @@ index f0fbe643..a96254e8 100644
        config             Validate and view the Compose file
        create             Create services
        down               Stop and remove containers, networks, images, and volumes
-+      download           Download a docker-compose bundle
++      download           Download a docker-compose app
        events             Receive real time events from containers
        exec               Execute a command in a running container
        help               Get help on a command
@@ -52,20 +52,20 @@ index f0fbe643..a96254e8 100644
  
 +    def download(self, options):
 +        """
-+        Downloads a docker-compose bundle.
++        Downloads a docker-compose app.
 +
-+        Usage: download [options] BUNDLE
++        Usage: download [options] APP
 +        """
 +        project_dir = self.toplevel_options.get('--project-directory') or './'
-+        bundle = options['BUNDLE']
++        app = options['APP']
 +        environment = Environment.from_env_file(project_dir)
-+        download_compose_bundle(get_client(environment), project_dir, bundle)
++        download_compose_app(get_client(environment), project_dir, app)
 +
      def events(self, options):
          """
          Receive real time events from containers.
 diff --git a/compose/project.py b/compose/project.py
-index 696c8b04..1aaddc16 100644
+index 696c8b04..2113e9a6 100644
 --- a/compose/project.py
 +++ b/compose/project.py
 @@ -5,16 +5,22 @@ import datetime
@@ -135,11 +135,11 @@ index 696c8b04..1aaddc16 100644
 +    return r
 +
 +
-+def download_compose_bundle(client, project_dir, compose_bundle):
++def download_compose_app(client, project_dir, compose_app):
 +    digest = client.inspect_distribution(
-+        compose_bundle)['Descriptor']['digest']
++        compose_app)['Descriptor']['digest']
 +
-+    registry, repo = auth.resolve_repository_name(compose_bundle)
++    registry, repo = auth.resolve_repository_name(compose_app)
 +    if '@sha256' in repo:
 +        repo, _ = repo.split('@sha256')
 +    elif ':' in repo:
@@ -157,11 +157,11 @@ index 696c8b04..1aaddc16 100644
 +        'application/vnd.oci.image.manifest.v1+json'
 +    )
 +    manifest = r.json()
-+    annotation = (manifest.get('annotations') or {}).get('compose-bundle')
++    annotation = (manifest.get('annotations') or {}).get('compose-app')
 +    if not annotation:
-+        raise ProjectError('Invalid bundle - Manifest missing required property "annotations.compose-bundle"')
++        raise ProjectError('Invalid app - Manifest missing required property "annotations.compose-app"')
 +    if annotation != 'v1':
-+        raise ProjectError('Invalid bundle - "annotations.compose-bundle={}" not supported'.format(annotation))
++        raise ProjectError('Invalid app - "annotations.compose-app={}" not supported'.format(annotation))
 +    digest = manifest['layers'][0]['digest']
 +    r = _reg_get(
 +        'https://' + registry + '/v2/' + repo + '/blobs/' + digest,
@@ -171,5 +171,5 @@ index 696c8b04..1aaddc16 100644
 +    tf = tarfile.open(mode='r:gz', fileobj=BytesIO(r.content))
 +    tf.extractall(project_dir)
 -- 
-2.26.1
+2.26.2
 
