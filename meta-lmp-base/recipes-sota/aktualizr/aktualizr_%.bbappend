@@ -1,7 +1,7 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-BRANCH_lmp = "compose"
-SRCREV_lmp = "8cafbd9f5da1d01d1b98fd83af932d23d197d9fc"
+BRANCH_lmp = "compose-apps"
+SRCREV_lmp = "4ae083106d3a3a395e007d2d7cf32f85487f29e1"
 
 SRC_URI_lmp = "gitsm://github.com/doanac/aktualizr-lite;branch=${BRANCH};name=aktualizr \
     file://aktualizr.service \
