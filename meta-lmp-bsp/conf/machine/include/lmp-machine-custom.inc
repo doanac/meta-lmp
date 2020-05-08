@@ -116,6 +116,27 @@ OSTREE_KERNEL_ARGS_mx6 ?= "console=tty1 console=ttymxc0,115200 ${OSTREE_KERNEL_A
 OSTREE_KERNEL_ARGS_mx7d ?= "console=tty1 console=ttymxc0,115200 ${OSTREE_KERNEL_ARGS_COMMON}"
 OSTREE_KERNEL_ARGS_mx7ulp ?= "console=tty1 console=ttyLP0,115200 ${OSTREE_KERNEL_ARGS_COMMON}"
 
+# cubox-i (hummingboard2)
+KERNEL_DEVICETREE_append_cubox-i = " \
+    imx6dl-hummingboard2-som-v15.dtb imx6q-hummingboard2-som-v15.dtb \
+    imx6dl-hummingboard2-emmc-som-v15.dtb imx6q-hummingboard2-emmc-som-v15.dtb \
+    imx6dl-hummingboard2.dtb imx6q-hummingboard2.dtb \
+"
+PREFERRED_PROVIDER_virtual/bootloader_cubox-i = "u-boot-fio"
+PREFERRED_PROVIDER_u-boot_cubox-i = "u-boot-fio"
+PREFERRED_PROVIDER_u-boot-fw-utils_cubox-i = "libubootenv"
+PREFERRED_RPROVIDER_u-boot-fw-utils_cubox-i = "libubootenv"
+MACHINE_ESSENTIAL_EXTRA_RDEPENDS_append_cubox-i = "u-boot-ostree-scr-fit"
+SOTA_CLIENT_FEATURES_append_cubox-i = " ubootenv"
+IMAGE_BOOT_FILES_append_cubox-i = " boot.itb "
+KERNEL_IMAGETYPE_cubox-i = "fitImage"
+KERNEL_CLASSES_cubox-i = " kernel-lmp-fitimage "
+OSTREE_KERNEL_cubox-i = "${KERNEL_IMAGETYPE}-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE}"
+UBOOT_DTB_LOADADDRESS_cubox-i = "0x18000000"
+UBOOT_RD_LOADADDRESS_cubox-i = "0x13000000"
+WKS_FILES_sota_cubox-i = "sdimage-imx6-spl-sota.wks"
+UBOOT_EXTLINUX_cubox-i = ""
+
 # Toradex Colibri iMX7 eMMC
 UBOOT_MAKE_TARGET_colibri-imx7 = "u-boot.imx"
 UBOOT_BINARY_colibri-imx7 = "u-boot.imx"
@@ -132,6 +153,25 @@ KERNEL_CLASSES_colibri-imx7 = " kernel-lmp-fitimage "
 OSTREE_KERNEL_colibri-imx7 = "${KERNEL_IMAGETYPE}-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE}"
 UBOOT_DTB_LOADADDRESS_colibri-imx7 = "0x82000000"
 UBOOT_RD_LOADADDRESS_colibri-imx7 = "0x82100000"
+
+# iMX6ULL EVK
+PREFERRED_PROVIDER_virtual/kernel_imx6ullevk ?= "linux-lmp"
+PREFERRED_PROVIDER_virtual/bootloader_imx6ullevk = "u-boot-fio"
+PREFERRED_PROVIDER_u-boot_imx6ullevk = "u-boot-fio"
+PREFERRED_PROVIDER_u-boot-fw-utils_imx6ullevk = "libubootenv"
+PREFERRED_RPROVIDER_u-boot-fw-utils_imx6ullevk = "libubootenv"
+UBOOT_CONFIG_imx6ullevk = ""
+UBOOT_MACHINE_imx6ullevk = "mx6ull_14x14_evk_config"
+UBOOT_ENTRYPOINT_imx6ullevk  = "0x82000000"
+UBOOT_DTB_LOADADDRESS_imx6ullevk = "0x82f00000"
+UBOOT_RD_LOADADDRESS_imx6ullevk = "0x83000000"
+IMAGE_BOOT_FILES_imx6ullevk = "boot.scr uEnv.txt"
+KERNEL_DEVICETREE_imx6ullevk = "imx6ull-14x14-evk.dtb"
+KERNEL_IMAGETYPE_imx6ullevk = "fitImage"
+KERNEL_CLASSES_imx6ullevk = " kernel-lmp-fitimage "
+OSTREE_KERNEL_imx6ullevk = "${KERNEL_IMAGETYPE}-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE}"
+OSTREE_KERNEL_ARGS_imx6ullevk ?= "console=tty1 console=ttymxc0,115200 root=/dev/mmcblk1p2 rootfstype=ext4"
+WKS_FILE_imx6ullevk_sota = "sdimage-imx-sota.wks"
 
 # Toradex Apalis iMX6
 EXTRA_IMAGEDEPENDS_append_apalis-imx6 = " u-boot-script-toradex"
