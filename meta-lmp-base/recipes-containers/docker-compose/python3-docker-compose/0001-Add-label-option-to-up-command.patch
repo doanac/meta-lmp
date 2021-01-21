@@ -1,0 +1,66 @@
+From 5684c19afb2e6ce0a65fc8d3201d6bd4a90d314a Mon Sep 17 00:00:00 2001
+From: Andy Doan <andy@foundries.io>
+Date: Wed, 20 Jan 2021 16:41:52 -0600
+Subject: [PATCH] Add "--label" option to "up" command
+
+This allows a user to attach an extra custom label to each container
+launched by compose.
+
+Signed-off-by: Andy Doan <andy@foundries.io>
+---
+ compose/cli/main.py | 3 +++
+ compose/project.py  | 3 +++
+ 2 files changed, 6 insertions(+)
+
+diff --git a/compose/cli/main.py b/compose/cli/main.py
+index 626ef294..877d96ef 100644
+--- a/compose/cli/main.py
++++ b/compose/cli/main.py
+@@ -1017,6 +1017,7 @@ class TopLevelCommand:
+                                        container. Implies --abort-on-container-exit.
+             --scale SERVICE=NUM        Scale SERVICE to NUM instances. Overrides the
+                                        `scale` setting in the Compose file if present.
++            --label key=val            Add a custom label to each container.
+         """
+         start_deps = not options['--no-deps']
+         always_recreate_deps = options['--always-recreate-deps']
+@@ -1028,6 +1029,7 @@ class TopLevelCommand:
+         detached = options.get('--detach')
+         no_start = options.get('--no-start')
+         attach_dependencies = options.get('--attach-dependencies')
++        extra_label = options.get('--label')
+ 
+         if detached and (cascade_stop or exit_value_from or attach_dependencies):
+             raise UserError(
+@@ -1064,6 +1066,7 @@ class TopLevelCommand:
+                     renew_anonymous_volumes=options.get('--renew-anon-volumes'),
+                     silent=options.get('--quiet-pull'),
+                     cli=native_builder,
++                    extra_label=extra_label,
+                 )
+ 
+             try:
+diff --git a/compose/project.py b/compose/project.py
+index 420cb654..a86f988c 100644
+--- a/compose/project.py
++++ b/compose/project.py
+@@ -595,6 +595,7 @@ class Project:
+            cli=False,
+            one_off=False,
+            override_options=None,
++           extra_label=None,
+            ):
+ 
+         if cli:
+@@ -613,6 +614,8 @@ class Project:
+ 
+         for svc in services:
+             svc.ensure_image_exists(do_build=do_build, silent=silent, cli=cli)
++            if extra_label:
++                svc.extra_labels.append(extra_label)
+         plans = self._get_convergence_plans(
+             services,
+             strategy,
+-- 
+2.30.0
+
