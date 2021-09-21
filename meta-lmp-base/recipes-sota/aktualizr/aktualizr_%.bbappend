@@ -1,7 +1,7 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 BRANCH_lmp = "master"
-SRCREV_lmp = "a5d7363cd24e82659c9315f1e91a8b2563e9e118"
+SRCREV_lmp = "5e2f6da2c1ad02ea87fa32564d9b37d9771a4ec3"
 
 SRC_URI_lmp = "gitsm://github.com/foundriesio/aktualizr-lite;branch=${BRANCH};name=aktualizr \
     file://aktualizr.service \
@@ -53,7 +53,7 @@ do_install_append_lmp() {
     install -m 0644 ${WORKDIR}/tmpfiles.conf ${D}${nonarch_libdir}/tmpfiles.d/aktualizr-lite.conf
 }
 
-PACKAGES += "${PN}-get ${PN}-lite"
+PACKAGES += "${PN}-get ${PN}-lite ${PN}-lite-lib"
 FILES_${PN}-get = "${bindir}/aktualizr-get"
 FILES_${PN}-lite = "${bindir}/aktualizr-lite"
 
@@ -61,3 +61,6 @@ FILES_${PN}-lite = "${bindir}/aktualizr-lite"
 RDEPENDS_${PN}-lite = "${RDEPENDS_aktualizr}"
 
 FILES_${PN}-lite += "${nonarch_libdir}/tmpfiles.d/aktualizr-lite.conf"
+
+FILES_${PN}-lite-lib = "${libdir}/libaktualizr_lite.so"
+FILES_${PN}-dev += "${includedir}/${PN}-lite"
