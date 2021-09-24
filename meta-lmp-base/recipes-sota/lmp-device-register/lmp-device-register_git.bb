@@ -22,11 +22,12 @@ S = "${WORKDIR}/git"
 
 inherit cmake
 
-RDEPENDS_${PN} += "openssl-bin aktualizr-lite"
+RDEPENDS_${PN} += "openssl-bin ${SOTA_CLIENT}"
 
 EXTRA_OECMAKE += "\
     -DGIT_COMMIT=${SRCREV} \
     -DHARDWARE_ID=${MACHINE} \
     -DDEVICE_FACTORY=${LMP_DEVICE_FACTORY} \
     -DDEVICE_API=${LMP_DEVICE_API} \
+    -DSOTA_CLIENT=${SOTA_CLIENT} \
 "
